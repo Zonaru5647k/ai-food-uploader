@@ -277,6 +277,77 @@ if(localStorage.getItem('aifood_apikey')) loadData();
 }
   
 </script>
+
+  <div id="cats"></div>
+<style>
+.cat { position: fixed; font-size: 28px; pointer-events: none; z-index: 9999; transition: transform 0.1s; white-space: nowrap; }
+</style>
+<script>
+const cats = [];
+const NUM_CATS = 6;
+const EMOJIS = ['🐱🪄','😼⚾','🐈🏏','😹🦇','🙀🥎','😾🪃'];
+
+for(let i = 0; i < NUM_CATS; i++) {
+  const el = document.createElement('div');
+  el.className = 'cat';
+  el.textContent = EMOJIS[i % EMOJIS.length];
+  document.getElementById('cats').appendChild(el);
+  cats.push({
+    el,
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    vx: (Math.random() * 4 + 2) * (Math.random()>0.5?1:-1),
+    vy: (Math.random() * 4 + 2) * (Math.random()>0.5?1:-1),
+    swinging: false,
+    swingAngle: 0,
+    swingDir: 1
+  });
+}
+
+const mouse = {x: window.innerWidth/2, y: window.innerHeight/2};
+document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+function animateCats() {
+  cats.forEach(c => {
+    const dx = mouse.x - c.x;
+    const dy = mouse.y - c.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    if(dist < 200) {
+      c.swinging = true;
+      c.swingAngle += 25 * c.swingDir;
+      if(c.swingAngle > 60 || c.swingAngle < -60) c.swingDir *= -1;
+      const speed = 5;
+      c.vx = (dx/dist) * speed;
+      c.vy = (dy/dist) * speed;
+    } else {
+      c.swinging = false;
+      c.swingAngle *= 0.85;
+      c.vx += (Math.random()-0.5) * 0.5;
+      c.vy += (Math.random()-0.5) * 0.5;
+      const maxSpeed = 3;
+      const spd = Math.sqrt(c.vx*c.vx+c.vy*c.vy);
+      if(spd > maxSpeed) { c.vx=(c.vx/spd)*maxSpeed; c.vy=(c.vy/spd)*maxSpeed; }
+    }
+
+    c.x += c.vx;
+    c.y += c.vy;
+
+    if(c.x < 0) { c.x = 0; c.vx *= -1; }
+    if(c.x > window.innerWidth - 60) { c.x = window.innerWidth - 60; c.vx *= -1; }
+    if(c.y < 0) { c.y = 0; c.vy *= -1; }
+    if(c.y > window.innerHeight - 40) { c.y = window.innerHeight - 40; c.vy *= -1; }
+
+    const flip = c.vx < 0 ? 'scaleX(-1)' : '';
+    c.el.style.left = c.x + 'px';
+    c.el.style.top  = c.y + 'px';
+    c.el.style.transform = `${flip} rotate(${c.swingAngle}deg)`;
+  });
+  requestAnimationFrame(animateCats);
+}
+animateCats();
+</script>
+  
 </body>
 </html>
 
