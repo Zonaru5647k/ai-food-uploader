@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Food Uploader Dashboard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; }
+.dash { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 12px; }
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon { width: 44px; height: 44px; background: #ff4444; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.title { font-size: 20px; font-weight: 600; }
+.subtitle { font-size: 13px; color: #888; margin-top: 2px; }
+.live-badge { display: flex; align-items: center; gap: 6px; background: #1a2a1a; border: 1px solid #2a4a2a; border-radius: 20px; padding: 6px 14px; font-size: 13px; color: #4ade80; }
+.live-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 2rem; }
+.metric { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1.25rem; }
+.metric-label { font-size: 12px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.metric-value { font-size: 32px; font-weight: 700; }
+.metric-sub { font-size: 12px; color: #555; margin-top: 4px; }
+.green { color: #4ade80; }
+.red { color: #f87171; }
+.yellow { color: #fbbf24; }
+.gray { color: #888; }
+.card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+.card-title { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+.progress-bar-bg { height: 10px; background: #2a2a2a; border-radius: 5px; overflow: hidden; margin: 8px 0; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #4ade80, #22c55e); border-radius: 5px; transition: width 1s ease; }
+.progress-labels { display: flex; justify-content: space-between; font-size: 12px; color: #666; }
+.status-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #222; }
+.status-row:last-child { border-bottom: none; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-ok { background: #4ade80; box-shadow: 0 0 8px #4ade8055; }
+.dot-warn { background: #fbbf24; box-shadow: 0 0 8px #fbbf2455; animation: pulse 2s infinite; }
+.dot-err { background: #f87171; box-shadow: 0 0 8px #f8717155; }
+.dot-idle { background: #444; }
+.status-name { font-size: 14px; flex: 1; }
+.status-val { font-size: 13px; color: #666; }
+table { width: 100%; font-size: 13px; border-collapse: collapse; table-layout: fixed; }
+th { color: #666; font-weight: 600; padding: 10px 12px; text-align: left; border-bottom: 1px solid #222; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+td { padding: 12px 12px; border-bottom: 1px solid #1a1a1a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #222; }
+.pill { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+.pill-ok { background: #1a2a1a; color: #4ade80; border: 1px solid #2a4a2a; }
+.pill-err { background: #2a1a1a; color: #f87171; border: 1px solid #4a2a2a; }
+.pill-proc { background: #2a2a1a; color: #fbbf24; border: 1px solid #4a4a2a; }
+.btn { font-size: 13px; padding: 8px 16px; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; cursor: pointer; transition: all 0.2s; }
+.btn:hover { background: #333; border-color: #444; }
+.btn-primary { background: #ff4444; border-color: #ff4444; }
+.btn-primary:hover { background: #ff6666; }
+.input-row { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.input-row input { flex: 1; min-width: 200px; font-size: 13px; padding: 9px 12px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: #fff; outline: none; }
+.input-row input:focus { border-color: #555; }
+.loading { text-align: center; padding: 3rem; color: #555; font-size: 14px; }
+.yt-link { color: #ff4444; text-decoration: none; font-weight: 500; }
+.yt-link:hover { text-decoration: underline; }
+.refresh-time { font-size: 11px; color: #444; text-align: right; margin-top: 8px; }
+.error-box { background: #2a1a1a; border: 1px solid #4a2a2a; border-radius: 8px; padding: 1rem; font-size: 13px; color: #f87171; margin-bottom: 1rem; display: none; }
+.config-hint { font-size: 12px; color: #555; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="dash">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">🍛</div>
+      <div>
+        <div class="title">AI Food Uploader</div>
+        <div class="subtitle">Bangla AI Food Talking — YouTube Auto Bot</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="live-badge"><div class="live-dot"></div> Live</div>
+      <button class="btn" onclick="loadData()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Connect to your Google Sheet</div>
+    <div class="input-row">
+      <input id="sheet-id" placeholder="Google Sheet ID..." />
+      <input id="api-key" placeholder="Google Sheets API Key..." />
+      <button class="btn btn-primary" onclick="saveAndLoad()">Load</button>
+    </div>
+    <div class="config-hint">Sheet ID: 1TxNQBYOgrrAJc51UIFW-rXybcP6GHaH_HelKxomPTlI &nbsp;|&nbsp; Get API key from Google Cloud Console → Credentials → API Key</div>
+  </div>
+
+  <div class="error-box" id="error-box"></div>
+  <div id="main-content">
+    <div class="loading">Enter your API key above and click Load to view your dashboard</div>
+  </div>
+
+</div>
+
+<script>
+const SHEET_PREFILL = '1TxNQBYOgrrAJc51UIFW-rXybcP6GHaH_HelKxomPTlI';
+document.getElementById('sheet-id').value = localStorage.getItem('aifood_sheet') || SHEET_PREFILL;
+document.getElementById('api-key').value  = localStorage.getItem('aifood_apikey') || '';
+
+function showError(msg) {
+  const b = document.getElementById('error-box');
+  b.style.display = 'block'; b.textContent = msg;
+}
+function hideError() { document.getElementById('error-box').style.display = 'none'; }
+
+function saveAndLoad() {
+  const s = document.getElementById('sheet-id').value.trim();
+  const k = document.getElementById('api-key').value.trim();
+  if(s) localStorage.setItem('aifood_sheet', s);
+  if(k) localStorage.setItem('aifood_apikey', k);
+  loadData();
+}
+
+async function loadData() {
+  const sheetId = document.getElementById('sheet-id').value.trim();
+  const apiKey  = document.getElementById('api-key').value.trim();
+  if(!sheetId || !apiKey) { showError('Please enter both Sheet ID and API key.'); return; }
+  hideError();
+  document.getElementById('main-content').innerHTML = '<div class="loading">Loading your data...</div>';
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Tracker?key=${apiKey}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if(json.error) { showError('Error: ' + json.error.message); document.getElementById('main-content').innerHTML=''; return; }
+    const rows = json.values || [];
+    if(rows.length <= 1) { document.getElementById('main-content').innerHTML='<div class="loading">No data yet — run your first upload!</div>'; return; }
+    const data = rows.slice(1).map(r => ({
+      id: r[0]||'', name: r[1]||'', status: r[2]||'',
+      title: r[3]||'', url: r[4]||'', time: r[5]||'', error: r[6]||''
+    }));
+    renderDashboard(data);
+  } catch(e) {
+    showError('Failed to load: ' + e.message);
+    document.getElementById('main-content').innerHTML = '';
+  }
+}
+
+function renderDashboard(data) {
+  const uploaded   = data.filter(r=>r.status==='uploaded').length;
+  const failed     = data.filter(r=>r.status==='failed').length;
+  const processing = data.filter(r=>r.status==='processing').length;
+  const total      = data.length;
+  const pending    = total - uploaded - failed - processing;
+  const pct        = total > 0 ? Math.round((uploaded/total)*100) : 0;
+  const last       = data.filter(r=>r.status==='uploaded').slice(-1)[0];
+  const recent     = data.filter(r=>r.status==='uploaded').slice(-10).reverse();
+  const now        = new Date().toLocaleTimeString();
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Total tracked</div>
+        <div class="metric-value gray">${total}</div>
+        <div class="metric-sub">videos</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Uploaded</div>
+        <div class="metric-value green">${uploaded}</div>
+        <div class="metric-sub">on YouTube</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Pending</div>
+        <div class="metric-value yellow">${pending + processing}</div>
+        <div class="metric-sub">in queue</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Failed</div>
+        <div class="metric-value red">${failed}</div>
+        <div class="metric-sub">need retry</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Overall progress</div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="progress-labels">
+        <span>${uploaded} of ${total} uploaded</span>
+        <span>${pct}% done</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">System status</div>
+      <div class="status-row">
+        <div class="status-dot dot-ok"></div>
+        <div class="status-name">GitHub Actions scheduler</div>
+        <div class="status-val">Runs every 2 hours</div>
+      </div>
+      <div class="status-row">
+        <div class="status-dot ${uploaded>0?'dot-ok':'dot-idle'}"></div>
+        <div class="status-name">YouTube uploader</div>
+        <div class="status-val">${uploaded>0?'Working':'Not started'}</div>
+      </div>
+      <div class="status-row">
+        <div class="status-dot ${processing>0?'dot-warn':'dot-idle'}"></div>
+        <div class="status-name">Currently processing</div>
+        <div class="status-val">${processing>0?processing+' video(s) running':'Idle'}</div>
+      </div>
+      <div class="status-row">
+        <div class="status-dot ${failed>0?'dot-err':'dot-ok'}"></div>
+        <div class="status-name">Failed uploads</div>
+        <div class="status-val">${failed>0?failed+' need attention':'All good'}</div>
+      </div>
+      <div class="status-row">
+        <div class="status-dot dot-ok"></div>
+        <div class="status-name">Last successful upload</div>
+        <div class="status-val">${last?last.time:'No uploads yet'}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recent uploads</div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:35%">Title</th>
+            <th style="width:22%">File</th>
+            <th style="width:13%">Status</th>
+            <th style="width:18%">Time</th>
+            <th style="width:12%">Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${recent.length===0
+            ? '<tr><td colspan="5" style="text-align:center;color:#555;padding:2rem">No uploads yet</td></tr>'
+            : recent.map(r=>`
+            <tr>
+              <td title="${r.title}">${r.title||'—'}</td>
+              <td title="${r.name}">${r.name||'—'}</td>
+              <td><span class="pill ${r.status==='uploaded'?'pill-ok':r.status==='failed'?'pill-err':'pill-proc'}">${r.status}</span></td>
+              <td>${r.time||'—'}</td>
+              <td>${r.url?`<a class="yt-link" href="${r.url}" target="_blank">Watch</a>`:'—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="refresh-time">Last refreshed: ${now} &nbsp;|&nbsp; Auto-refreshes every 5 min</div>
+  `;
+
+  setTimeout(loadData, 5 * 60 * 1000);
+}
+
+if(localStorage.getItem('aifood_apikey')) loadData();
+</script>
+</body>
+</html>
+```
+
+5. Click **"Commit new file"** ✅
+
+---
+
+## STEP 2 — Enable GitHub Pages
+
+1. GitHub repo → **Settings**
+2. Left sidebar → **"Pages"**
+3. Under "Branch" select **"main"**
+4. Click **"Save"**
+
+---
+
+After 2 minutes your dashboard will be live at:
+```
+https://zonaru5647k.github.io/ai-food-uploader
