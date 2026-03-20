@@ -77,17 +77,23 @@ def mark(sheet, fid, fname, status, title="", url="", error=""):
             datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error])
 
 def generate_metadata(fname):
-    prompt = f"""তুমি একজন বাংলা YouTube ভাইরাল কন্টেন্ট এক্সপার্ট। AI food talking ভিডিও বাংলায়।
-ফাইল নাম: {fname}
+    prompt = f"""You are a Bangla YouTube viral content expert for AI food talking videos.
 
-শুধু JSON দাও, কোনো markdown বা অন্য কিছু না:
+File name: {fname}
+
+Reply with ONLY a JSON object. No explanation. No markdown. Just raw JSON like this:
 {{
-  "youtube_title": "আকর্ষণীয় বাংলা টাইটেল ৬০ অক্ষরের মধ্যে ইমোজি সহ",
-  "youtube_description": "বাংলায় ৩০০ শব্দের বর্ণনা ইমোজি সহ শেষে subscribe বলো",
-  "youtube_hashtags": "#AIFood #বাংলাফুড #Shorts দিয়ে শুরু ২০টি ভাইরাল হ্যাশট্যাগ",
-  "facebook_caption": "Facebook এর জন্য বাংলা ক্যাপশন ১৫০ শব্দ ইমোজি সহ",
-  "thumbnail_text": "থাম্বনেইলের জন্য ছোট বাংলা টেক্সট সর্বোচ্চ ৫ শব্দ ইমোজি সহ"
-}}"""
+  "youtube_title": "🍛 বিরিয়ানি কথা বলছে! AI ম্যাজিক দেখুন",
+  "youtube_description": "🤖 AI ম্যাজিকের দুনিয়ায় স্বাগতম! আজকের ভিডিওতে বিরিয়ানি নিজেই কথা বলছে! 😱 এই অসাধারণ ভিডিও দেখে আপনিও অবাক হয়ে যাবেন! আমাদের চ্যানেলে প্রতিদিন নতুন AI Food Talking ভিডিও আসে। এখনই Subscribe করুন এবং Bell Icon চাপুন! 🔔 ভালো লাগলে Like দিন এবং বন্ধুদের সাথে Share করুন!",
+  "youtube_hashtags": "#AIFood #বাংলাফুড #Shorts #YouTubeShorts #ViralShorts #FoodTalking #AITalking #বাংলাদেশ #ভাইরাল #খাবার #BanglaAI #FoodLovers #AIVideo #ShortVideo #TrendingShorts #বাংলা #AIMagic #FoodShorts #ViralVideo #NewShorts",
+  "facebook_caption": "😱 দেখুন কিভাবে বিরিয়ানি AI এর সাহায্যে কথা বলছে! 🤖🍽️ Like করুন এবং বন্ধুদের সাথে Share করুন! #AIFood #বাংলাফুড #ViralVideo",
+  "thumbnail_text": "🍛 বিরিয়ানি কথা বলছে!"
+}}
+
+Now generate fresh unique JSON for file: {fname}
+Title must be creative viral Bangla with emojis, max 60 chars.
+Description must be in Bangla minimum 200 words ending with subscribe request.
+All values must be real Bangla content not instructions."""
 
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
