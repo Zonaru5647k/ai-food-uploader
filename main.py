@@ -8,7 +8,7 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 
 DRIVE_FOLDER_ID       = os.environ["DRIVE_FOLDER_ID"]
 SHEET_ID              = os.environ["SHEET_ID"]
-GEMINI_API_KEY        = os.environ["GEMINI_API_KEY"]
+GROQ_API_KEY          = os.environ["GROQ_API_KEY"]
 SERVICE_ACCOUNT_JSON  = os.environ["GOOGLE_SERVICE_ACCOUNT"]
 YOUTUBE_CLIENT_ID     = os.environ["YOUTUBE_CLIENT_ID"]
 YOUTUBE_CLIENT_SECRET = os.environ["YOUTUBE_CLIENT_SECRET"]
@@ -16,7 +16,7 @@ YOUTUBE_REFRESH_TOKEN = os.environ["YOUTUBE_REFRESH_TOKEN"]
 
 SHORTS_TAGS = ["Shorts","YouTubeShorts","ViralShorts","ShortVideo",
                "বাংলাShorts","AIShorts","FoodShorts","ViralVideo",
-               "TrendingShorts","NewShorts"]
+               "TrendingShorts","NewShorts","AIFood","BanglaFood"]
 
 BRIGHT_COLORS = [
     ("#FF6B6B","#FFE66D"),("#4ECDC4","#FFE66D"),("#FF6B9D","#C44DFF"),
@@ -89,13 +89,23 @@ def generate_metadata(fname):
   "thumbnail_text": "থাম্বনেইলের জন্য ছোট বাংলা টেক্সট সর্বোচ্চ ৫ শব্দ ইমোজি সহ"
 }}"""
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-    r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    body = {
+        "model": "llama-3.1-8b-instant",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7,
+        "max_tokens": 1500
+    }
+    r = requests.post("https://api.groq.com/openai/v1/chat/completions",
+                      headers=headers, json=body)
     rj = r.json()
-    print("Gemini status:", r.status_code)
-    if "candidates" not in rj:
-        raise Exception(f"Gemini error: {rj}")
-    text = rj["candidates"][0]["content"]["parts"][0]["text"].strip()
+    print("Groq status:", r.status_code)
+    if "choices" not in rj:
+        raise Exception(f"Groq error: {rj}")
+    text = rj["choices"][0]["message"]["content"].strip()
     if "```" in text:
         text = text.split("```")[1]
         if text.startswith("json"):
@@ -121,14 +131,14 @@ def create_thumbnail(thumb_text):
         f_small= ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 45)
     except:
         f_big = f_mid = f_small = ImageFont.load_default()
-    draw.text((W//2, 200), "🍛", font=f_big, fill=c1, anchor="mm")
-    draw.text((W//2, 370), "AI FOOD", font=f_mid,
+    draw.text((W//2, 180), "🍛", font=f_big, fill=c1, anchor="mm")
+    draw.text((W//2, 350), "AI FOOD", font=f_mid,
               fill=c1, anchor="mm", stroke_width=3, stroke_fill="white")
-    wrapped = textwrap.fill(thumb_text, width=22)
-    draw.text((W//2, 530), wrapped, font=f_small,
+    wrapped = textwrap.fill(thumb_text, width=20)
+    draw.text((W//2, 510), wrapped, font=f_small,
               fill="#222222", anchor="mm", align="center")
-    draw.rounded_rectangle([50,610,260,680], radius=20, fill=c1)
-    draw.text((155,645), "Bangla AI Food", font=f_small, fill="white", anchor="mm")
+    draw.rounded_rectangle([50,600,320,670], radius=20, fill=c1)
+    draw.text((185,635), "Bangla AI Food", font=f_small, fill="white", anchor="mm")
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=95)
     buf.seek(0)
@@ -181,8 +191,7 @@ def main():
             while not done:
                 _, done = dl.next_chunk()
         url, title, vid = upload_youtube(youtube, local, meta)
-        thumb_text = meta.get("thumbnail_text", title[:30])
-        buf = create_thumbnail(thumb_text)
+        buf = create_thumbnail(meta["thumbnail_text"])
         media = MediaIoBaseUpload(buf, mimetype="image/jpeg", resumable=True)
         youtube.thumbnails().set(videoId=vid, media_body=media).execute()
         print("✅ Thumbnail uploaded!")
