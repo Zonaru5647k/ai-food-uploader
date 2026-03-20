@@ -77,23 +77,22 @@ def mark(sheet, fid, fname, status, title="", url="", error=""):
             datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error])
 
 def generate_metadata(fname):
-    prompt = f"""You are a Bangla YouTube viral content expert for AI food talking videos.
+
+  prompt = f"""You are a Bangla YouTube viral content expert. Videos are AI talking about food health benefits in Bangla language.
 
 File name: {fname}
 
-Reply with ONLY a JSON object. No explanation. No markdown. Just raw JSON like this:
+Reply with ONLY valid JSON. No markdown, no explanation, no extra text. Just the raw JSON object.
+
 {{
-  "youtube_title": "🍛 বিরিয়ানি কথা বলছে! AI ম্যাজিক দেখুন",
-  "youtube_description": "🤖 AI ম্যাজিকের দুনিয়ায় স্বাগতম! আজকের ভিডিওতে বিরিয়ানি নিজেই কথা বলছে! 😱 এই অসাধারণ ভিডিও দেখে আপনিও অবাক হয়ে যাবেন! আমাদের চ্যানেলে প্রতিদিন নতুন AI Food Talking ভিডিও আসে। এখনই Subscribe করুন এবং Bell Icon চাপুন! 🔔 ভালো লাগলে Like দিন এবং বন্ধুদের সাথে Share করুন!",
-  "youtube_hashtags": "#AIFood #বাংলাফুড #Shorts #YouTubeShorts #ViralShorts #FoodTalking #AITalking #বাংলাদেশ #ভাইরাল #খাবার #BanglaAI #FoodLovers #AIVideo #ShortVideo #TrendingShorts #বাংলা #AIMagic #FoodShorts #ViralVideo #NewShorts",
-  "facebook_caption": "😱 দেখুন কিভাবে বিরিয়ানি AI এর সাহায্যে কথা বলছে! 🤖🍽️ Like করুন এবং বন্ধুদের সাথে Share করুন! #AIFood #বাংলাফুড #ViralVideo",
-  "thumbnail_text": "🍛 বিরিয়ানি কথা বলছে!"
+  "youtube_title": "create a curiosity-driven viral Bangla title about AI revealing food health secrets, max 60 chars, with emojis, NEVER mention specific food name, use phrases like: কী হয়, অবাক করা তথ্য, জানলে চমকে যাবেন, AI বললো, বিজ্ঞান বলছে, শরীরে কী হয়",
+  "youtube_description": "write minimum 300 words in Bangla about how this food helps health, what AI discovered, what science says, benefits for body, who should eat it, when to eat it. Use emojis throughout. End with: আমাদের চ্যানেলে প্রতিদিন নতুন AI Health Food ভিডিও আসে। এখনই Subscribe করুন এবং Bell Icon চাপুন! 🔔 ভালো লাগলে Like দিন এবং বন্ধুদের সাথে Share করুন!",
+  "youtube_hashtags": "#AIHealth #স্বাস্থ্যকর #Shorts #YouTubeShorts #HealthTips #AIFood #বাংলা #HealthyFood #AITalking #স্বাস্থ্য #ViralShorts #FoodHealth #BanglaHealth #AIBangla #HealthBangla #খাবার #পুষ্টি #ViralVideo #TrendingShorts #NewShorts",
+  "facebook_caption": "write 150 words in Bangla about AI revealing amazing food health benefits, curiosity-driven, end with like and share request, include relevant hashtags",
+  "thumbnail_text": "short punchy Bangla text max 5 words with emoji about health or AI secret"
 }}
 
-Now generate fresh unique JSON for file: {fname}
-Title must be creative viral Bangla with emojis, max 60 chars.
-Description must be in Bangla minimum 200 words ending with subscribe request.
-All values must be real Bangla content not instructions."""
+IMPORTANT: Replace ALL the quoted instructions above with ACTUAL Bangla content. Return only the filled JSON."""
 
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
