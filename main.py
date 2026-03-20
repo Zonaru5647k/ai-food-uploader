@@ -6,20 +6,22 @@ Drive → Gemini AI → YouTube → Log to Google Sheets
 
 import os
 import json
-import pickle
 import random
-import gspread
 import requests
+import gspread
 from datetime import datetime
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 from google.oauth2.service_account import Credentials
+from google.oauth2.credentials import Credentials as OAuthCredentials
 
-DRIVE_FOLDER_ID      = os.environ["DRIVE_FOLDER_ID"]
-SHEET_ID             = os.environ["SHEET_ID"]
-GEMINI_API_KEY       = os.environ["GEMINI_API_KEY"]
-SERVICE_ACCOUNT_JSON = os.environ["GOOGLE_SERVICE_ACCOUNT"]
-YOUTUBE_TOKEN_PICKLE = os.environ["YOUTUBE_TOKEN_PICKLE"]
+DRIVE_FOLDER_ID        = os.environ["DRIVE_FOLDER_ID"]
+SHEET_ID               = os.environ["SHEET_ID"]
+GEMINI_API_KEY         = os.environ["GEMINI_API_KEY"]
+SERVICE_ACCOUNT_JSON   = os.environ["GOOGLE_SERVICE_ACCOUNT"]
+YOUTUBE_CLIENT_ID      = os.environ["YOUTUBE_CLIENT_ID"]
+YOUTUBE_CLIENT_SECRET  = os.environ["YOUTUBE_CLIENT_SECRET"]
+YOUTUBE_REFRESH_TOKEN  = os.environ["YOUTUBE_REFRESH_TOKEN"]
 
 def get_creds():
     info = json.loads(SERVICE_ACCOUNT_JSON)
@@ -29,8 +31,13 @@ def get_creds():
     ])
 
 def get_youtube():
-    token_bytes = bytes.fromhex(YOUTUBE_TOKEN_PICKLE)
-    creds = pickle.loads(token_bytes)
+    creds = OAuthCredentials(
+        token=None,
+        refresh_token=YOUTUBE_REFRESH_TOKEN,
+        client_id=YOUTUBE_CLIENT_ID,
+        client_secret=YOUTUBE_CLIENT_SECRET,
+        token_uri="https://oauth2.googleapis.com/token"
+    )
     return build("youtube", "v3", credentials=creds)
 
 def get_sheet():
@@ -73,27 +80,4 @@ def generate_metadata(file_name):
 
 শুধু JSON দাও, অন্য কিছু না:
 {{
-  "youtube_title": "আকর্ষণীয় বাংলা টাইটেল ৬০ অক্ষরের মধ্যে ইমোজি সহ",
-  "youtube_description": "বাংলায় ৩০০ শব্দের বর্ণনা ইমোজি সহ শেষে subscribe বলো",
-  "youtube_hashtags": "#AIFood #বাংলাফুড দিয়ে শুরু ২০টি ভাইরাল হ্যাশট্যাগ",
-  "facebook_caption": "Facebook এর জন্য বাংলা ক্যাপশন ১৫০ শব্দ ইমোজি সহ"
-}}"""
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    body = {"contents": [{"parts": [{"text": prompt}]}]}
-    response = requests.post(url, json=body)
-    text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
-    text = text.strip().strip("```json").strip("```").strip()
-    return json.loads(text)
-
-def upload_youtube(youtube, path, meta):
-    tags = [t.strip("#") for t in meta["youtube_hashtags"].split() if t.startswith("#")]
-    body = {
-        "snippet": {
-            "title": meta["youtube_title"],
-            "description": meta["youtube_description"] + "\n\n" + meta["youtube_hashtags"],
-            "tags": tags[:30],
-            "categoryId": "24",
-            "defaultLanguage": "bn"
-        },
-        "status": {"privacyStatus": "public", "s
+  "youtube_title": "আকর্ষণীয় বা
