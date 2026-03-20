@@ -80,14 +80,9 @@ tr:hover td { background: #222; }
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Connect to your Google Sheet</div>
-    <div class="input-row">
-      <input id="sheet-id" placeholder="Google Sheet ID..." />
-      <input id="api-key" placeholder="Google Sheets API Key..." />
-      <button class="btn btn-primary" onclick="saveAndLoad()">Load</button>
-    </div>
-    <div class="config-hint">Sheet ID: 1TxNQBYOgrrAJc51UIFW-rXybcP6GHaH_HelKxomPTlI &nbsp;|&nbsp; Get API key from Google Cloud Console → Credentials → API Key</div>
+  <div id="config-card" style="display:none;">
+    <input id="sheet-id" />
+    <input id="api-key" />
   </div>
 
   <div class="error-box" id="error-box"></div>
