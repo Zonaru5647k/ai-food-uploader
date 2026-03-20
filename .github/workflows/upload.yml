@@ -20,7 +20,7 @@ jobs:
           python-version: "3.11"
 
       - name: 📦 Install dependencies
-        run: pip install requests gspread google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+        run: pip install requests gspread google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib pillow
 
       - name: 🚀 Run uploader
         env:
