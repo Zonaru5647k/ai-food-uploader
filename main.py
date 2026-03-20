@@ -19,7 +19,7 @@ import io
 
 DRIVE_FOLDER_ID        = os.environ["DRIVE_FOLDER_ID"]
 SHEET_ID               = os.environ["SHEET_ID"]
-GROQ_API_KEY           = os.environ["GROQ_API_KEY"]
+DEEPSEEK_API_KEY       = os.environ["DEEPSEEK_API_KEY"]
 SERVICE_ACCOUNT_JSON   = os.environ["GOOGLE_SERVICE_ACCOUNT"]
 YOUTUBE_CLIENT_ID      = os.environ["YOUTUBE_CLIENT_ID"]
 YOUTUBE_CLIENT_SECRET  = os.environ["YOUTUBE_CLIENT_SECRET"]
