@@ -108,16 +108,16 @@ def generate_metadata(file_name):
 }}"""
 
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json"
     }
     body = {
-        "model": "llama3-8b-8192",
+        "model": "deepseek-chat",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
         "max_tokens": 1500
     }
-    response = requests.post("https://api.groq.com/openai/v1/chat/completions",
+    response = requests.post("https://api.deepseek.com/chat/completions",
                              headers=headers, json=body)
     rjson = response.json()
     print("Groq response status:", response.status_code)
