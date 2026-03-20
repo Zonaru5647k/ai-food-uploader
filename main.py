@@ -67,9 +67,9 @@ def get_pending_video(drive_service, sheet):
 def mark(sheet, fid, fname, status, title="", url="", error=""):
     try:
         cell = sheet.find(fid)
-        sheet.update(f"A{cell.row}:G{cell.row}",
-            [[fid, fname, status, title, url,
-              datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error]])
+        sheet.update(values=[[fid, fname, status, title, url,
+              datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error]],
+              range_name=f"A{cell.row}:G{cell.row}")
     except:
         sheet.append_row([fid, fname, status, title, url,
             datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error])
@@ -89,8 +89,17 @@ def generate_metadata(file_name):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     body = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(url, json=body)
-    text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
-    text = text.strip().strip("```json").strip("```").strip()
+    rjson = response.json()
+    print("Gemini response:", json.dumps(rjson, ensure_ascii=False)[:500])
+    if "candidates" not in rjson:
+        raise Exception(f"Gemini error: {rjson}")
+    text = rjson["candidates"][0]["content"]["parts"][0]["text"]
+    text = text.strip()
+    if "```" in text:
+        text = text.split("```")[1]
+        if text.startswith("json"):
+            text = text[4:]
+    text = text.strip()
     return json.loads(text)
 
 def upload_youtube(youtube, path, meta):
