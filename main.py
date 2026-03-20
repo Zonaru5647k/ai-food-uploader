@@ -8,7 +8,7 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 
 DRIVE_FOLDER_ID       = os.environ["DRIVE_FOLDER_ID"]
 SHEET_ID              = os.environ["SHEET_ID"]
-DEEPSEEK_API_KEY      = os.environ["DEEPSEEK_API_KEY"]
+OPENROUTER_API_KEY    = os.environ["OPENROUTER_API_KEY"]
 SERVICE_ACCOUNT_JSON  = os.environ["GOOGLE_SERVICE_ACCOUNT"]
 YOUTUBE_CLIENT_ID     = os.environ["YOUTUBE_CLIENT_ID"]
 YOUTUBE_CLIENT_SECRET = os.environ["YOUTUBE_CLIENT_SECRET"]
@@ -90,21 +90,23 @@ def generate_metadata(fname):
 }}"""
 
     headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json"
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com",
+        "X-Title": "AI Food Uploader"
     }
     body = {
-        "model": "deepseek-chat",
+        "model": "mistralai/mistral-7b-instruct:free",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
         "max_tokens": 1500
     }
-    r = requests.post("https://api.deepseek.com/chat/completions",
+    r = requests.post("https://openrouter.ai/api/v1/chat/completions",
                       headers=headers, json=body)
     rj = r.json()
-    print("DeepSeek status:", r.status_code)
+    print("OpenRouter status:", r.status_code)
     if "choices" not in rj:
-        raise Exception(f"DeepSeek error: {rj}")
+        raise Exception(f"OpenRouter error: {rj}")
     text = rj["choices"][0]["message"]["content"].strip()
     if "```" in text:
         text = text.split("```")[1]
@@ -132,13 +134,13 @@ def create_thumbnail(thumb_text):
     except:
         f_big = f_mid = f_small = ImageFont.load_default()
     draw.text((W//2, 200), "🍛", font=f_big, fill=c1, anchor="mm")
-    draw.text((W//2, 370), "🤖 AI FOOD", font=f_mid,
+    draw.text((W//2, 370), "AI FOOD", font=f_mid,
               fill=c1, anchor="mm", stroke_width=3, stroke_fill="white")
     wrapped = textwrap.fill(thumb_text, width=22)
     draw.text((W//2, 530), wrapped, font=f_small,
               fill="#222222", anchor="mm", align="center")
     draw.rounded_rectangle([50,610,260,680], radius=20, fill=c1)
-    draw.text((155,645), "🇧🇩 বাংলা", font=f_small, fill="white", anchor="mm")
+    draw.text((155,645), "Bangla AI Food", font=f_small, fill="white", anchor="mm")
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=95)
     buf.seek(0)
