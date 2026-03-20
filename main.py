@@ -96,7 +96,7 @@ def generate_metadata(fname):
         "X-Title": "AI Food Uploader"
     }
     body = {
-        "model": "mistralai/mistral-7b-instruct:free",
+        "model": "meta-llama/llama-3.2-3b-instruct:free",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
         "max_tokens": 1500
