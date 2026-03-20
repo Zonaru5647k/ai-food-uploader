@@ -1,7 +1,6 @@
 """
 AI Food Talking Bangla - YouTube Auto Uploader
-Runs on GitHub Actions every 2 hours, uploads 1 video
-Drive → Groq AI → YouTube → Log to Google Sheets
+Drive → Groq AI → YouTube (with thumbnail + Shorts tags)
 """
 
 import os
@@ -9,11 +8,14 @@ import json
 import random
 import requests
 import gspread
+import textwrap
+from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
+from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload, MediaIoBaseUpload
 from google.oauth2.service_account import Credentials
 from google.oauth2.credentials import Credentials as OAuthCredentials
+import io
 
 DRIVE_FOLDER_ID        = os.environ["DRIVE_FOLDER_ID"]
 SHEET_ID               = os.environ["SHEET_ID"]
@@ -22,6 +24,22 @@ SERVICE_ACCOUNT_JSON   = os.environ["GOOGLE_SERVICE_ACCOUNT"]
 YOUTUBE_CLIENT_ID      = os.environ["YOUTUBE_CLIENT_ID"]
 YOUTUBE_CLIENT_SECRET  = os.environ["YOUTUBE_CLIENT_SECRET"]
 YOUTUBE_REFRESH_TOKEN  = os.environ["YOUTUBE_REFRESH_TOKEN"]
+
+BRIGHT_COLORS = [
+    ("#FF6B6B", "#FFE66D"),  # red to yellow
+    ("#4ECDC4", "#FFE66D"),  # teal to yellow
+    ("#FF6B9D", "#C44DFF"),  # pink to purple
+    ("#F7971E", "#FFD200"),  # orange to gold
+    ("#56CCF2", "#2F80ED"),  # light blue to blue
+    ("#6FCF97", "#27AE60"),  # light green to green
+    ("#EB5757", "#F2994A"),  # red to orange
+]
+
+SHORTS_TAGS = [
+    "Shorts", "YouTubeShorts", "ViralShorts", "ShortVideo",
+    "বাংলাShorts", "AIShorts", "FoodShorts", "ViralVideo",
+    "TrendingShorts", "NewShorts"
+]
 
 def get_creds():
     info = json.loads(SERVICE_ACCOUNT_JSON)
@@ -84,8 +102,9 @@ def generate_metadata(file_name):
 {{
   "youtube_title": "আকর্ষণীয় বাংলা টাইটেল ৬০ অক্ষরের মধ্যে ইমোজি সহ",
   "youtube_description": "বাংলায় ৩০০ শব্দের বর্ণনা ইমোজি সহ শেষে subscribe বলো",
-  "youtube_hashtags": "#AIFood #বাংলাফুড দিয়ে শুরু ২০টি ভাইরাল হ্যাশট্যাগ",
-  "facebook_caption": "Facebook এর জন্য বাংলা ক্যাপশন ১৫০ শব্দ ইমোজি সহ"
+  "youtube_hashtags": "#AIFood #বাংলাফুড #Shorts দিয়ে শুরু ২০টি ভাইরাল হ্যাশট্যাগ",
+  "facebook_caption": "Facebook এর জন্য বাংলা ক্যাপশন ১৫০ শব্দ ইমোজি সহ",
+  "thumbnail_text": "থাম্বনেইলের জন্য ছোট আকর্ষণীয় বাংলা টেক্সট সর্বোচ্চ ৬ শব্দ ইমোজি সহ"
 }}"""
 
     headers = {
@@ -112,13 +131,88 @@ def generate_metadata(file_name):
     text = text.strip()
     return json.loads(text)
 
+def create_thumbnail(title_text):
+    """Create a bright colorful thumbnail 1280x720"""
+    W, H = 1280, 720
+    img = Image.new("RGB", (W, H), "#FF6B6B")
+    draw = ImageDraw.Draw(img)
+
+    # Pick random bright gradient colors
+    color_pair = random.choice(BRIGHT_COLORS)
+    bg_color = color_pair[0]
+    accent = color_pair[1]
+
+    # Draw gradient background (simulate with bands)
+    for i in range(H):
+        ratio = i / H
+        r1, g1, b1 = int(bg_color[1:3],16), int(bg_color[3:5],16), int(bg_color[5:7],16)
+        r2, g2, b2 = int(accent[1:3],16), int(accent[3:5],16), int(accent[5:7],16)
+        r = int(r1 + (r2-r1)*ratio)
+        g = int(g1 + (g2-g1)*ratio)
+        b = int(b1 + (b2-b1)*ratio)
+        draw.line([(0,i),(W,i)], fill=(r,g,b))
+
+    # Draw decorative circles
+    draw.ellipse([(-100,-100),(300,300)], fill=(255,255,255,30))
+    draw.ellipse([(1000,400),(1400,800)], fill=(255,255,255,30))
+
+    # Draw white rounded rectangle in center
+    margin = 60
+    draw.rounded_rectangle([margin, margin, W-margin, H-margin],
+                           radius=40, fill=(255,255,255), outline=accent, width=8)
+
+    # Add food emojis as large text on sides
+    emojis = ["🍛", "🍜", "🍚", "🥘", "🍲"]
+    emoji = random.choice(emojis)
+
+    try:
+        # Try to load a font
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
+        font_text  = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+    except:
+        font_large = ImageFont.load_default()
+        font_text  = ImageFont.load_default()
+        font_small = ImageFont.load_default()
+
+    # Draw big emoji
+    draw.text((W//2, 180), emoji, font=font_large, fill=bg_color, anchor="mm")
+
+    # Draw AI FOOD text
+    draw.text((W//2, 360), "🤖 AI FOOD", font=font_text,
+              fill=bg_color, anchor="mm", stroke_width=3, stroke_fill="white")
+
+    # Draw thumbnail title text (wrap if long)
+    wrapped = textwrap.fill(title_text, width=20)
+    draw.text((W//2, 530), wrapped, font=font_small,
+              fill="#333333", anchor="mm", align="center")
+
+    # Add "বাংলা" badge
+    draw.rounded_rectangle([40, 580, 280, 660], radius=20, fill=bg_color)
+    draw.text((160, 620), "🇧🇩 বাংলা", font=font_small,
+              fill="white", anchor="mm")
+
+    # Save to bytes
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format="JPEG", quality=95)
+    img_bytes.seek(0)
+    return img_bytes
+
+def upload_thumbnail(youtube, video_id, img_bytes):
+    media = MediaIoBaseUpload(img_bytes, mimetype="image/jpeg", resumable=True)
+    youtube.thumbnails().set(videoId=video_id, media_body=media).execute()
+    print(f"✅ Thumbnail uploaded for {video_id}")
+
 def upload_youtube(youtube, path, meta):
-    tags = [t.strip("#") for t in meta["youtube_hashtags"].split() if t.startswith("#")]
+    # Combine regular tags + shorts tags
+    regular_tags = [t.strip("#") for t in meta["youtube_hashtags"].split() if t.startswith("#")]
+    all_tags = list(set(regular_tags + SHORTS_TAGS))[:30]
+
     body = {
         "snippet": {
             "title": meta["youtube_title"],
             "description": meta["youtube_description"] + "\n\n" + meta["youtube_hashtags"],
-            "tags": tags[:30],
+            "tags": all_tags,
             "categoryId": "24",
             "defaultLanguage": "bn"
         },
@@ -129,7 +223,8 @@ def upload_youtube(youtube, path, meta):
     response = None
     while response is None:
         _, response = req.next_chunk()
-    return f"https://youtu.be/{response['id']}", meta["youtube_title"]
+    video_id = response["id"]
+    return f"https://youtu.be/{video_id}", meta["youtube_title"], video_id
 
 def main():
     print(f"🚀 Run started: {datetime.utcnow()} UTC")
@@ -148,7 +243,10 @@ def main():
     mark(sheet, fid, fname, "processing")
 
     try:
+        # 1. Generate metadata
         meta  = generate_metadata(fname)
+
+        # 2. Download video
         local = f"/tmp/{fname}"
         req   = drive.files().get_media(fileId=fid)
         with open(local, "wb") as f:
@@ -156,9 +254,19 @@ def main():
             done = False
             while not done:
                 _, done = dl.next_chunk()
-        url, title = upload_youtube(youtube, local, meta)
+
+        # 3. Upload to YouTube
+        url, title, video_id = upload_youtube(youtube, local, meta)
+
+        # 4. Create and upload thumbnail
+        thumb_text = meta.get("thumbnail_text", title[:30])
+        img_bytes  = create_thumbnail(thumb_text)
+        upload_thumbnail(youtube, video_id, img_bytes)
+
+        # 5. Log success
         mark(sheet, fid, fname, "uploaded", title, url)
-        print(f"✅ Uploaded: {title} → {url}")
+        print(f"✅ Done! {title} → {url}")
+
     except Exception as e:
         print(f"❌ Error: {e}")
         mark(sheet, fid, fname, "failed", error=str(e))
