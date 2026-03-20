@@ -20,13 +20,15 @@ jobs:
           python-version: "3.11"
 
       - name: 📦 Install dependencies
-        run: pip install anthropic google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib gspread
+        run: pip install requests gspread google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
 
       - name: 🚀 Run uploader
         env:
-          DRIVE_FOLDER_ID:        ${{ secrets.DRIVE_FOLDER_ID }}
-          SHEET_ID:               ${{ secrets.SHEET_ID }}
-          ANTHROPIC_API_KEY:      ${{ secrets.ANTHROPIC_API_KEY }}
+          DRIVE_FOLDER_ID:       ${{ secrets.DRIVE_FOLDER_ID }}
+          SHEET_ID:              ${{ secrets.SHEET_ID }}
+          GEMINI_API_KEY:        ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
-          YOUTUBE_TOKEN_PICKLE:   ${{ secrets.YOUTUBE_TOKEN_PICKLE }}
+          YOUTUBE_CLIENT_ID:     ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
         run: python main.py
