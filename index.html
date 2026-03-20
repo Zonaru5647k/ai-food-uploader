@@ -237,13 +237,45 @@ function renderDashboard(data) {
         </tbody>
       </table>
     </div>
-    <div class="refresh-time">Last refreshed: ${now} &nbsp;|&nbsp; Auto-refreshes every 5 min</div>
+   <div class="refresh-time">Last refreshed: ${now} &nbsp;|&nbsp; Auto-refreshes every 5 min</div>
+    <div class="card" style="margin-top:1.25rem;text-align:center;">
+      <div class="card-title">Next video upload in</div>
+      <div id="countdown" style="font-size:48px;font-weight:700;color:#4ade80;letter-spacing:4px;padding:0.5rem 0;">--:--:--</div>
+      <div style="font-size:12px;color:#555;margin-top:4px;">GitHub Actions runs every 2 hours automatically</div>
+    </div>
   `;
 
   setTimeout(loadData, 5 * 60 * 1000);
+  startCountdown();
 }
 
 if(localStorage.getItem('aifood_apikey')) loadData();
+
+  function startCountdown() {
+  function getNextRun() {
+    const now = new Date();
+    const next = new Date(now);
+    const h = now.getUTCHours();
+    const nextH = Math.ceil((h + 0.001) / 2) * 2;
+    next.setUTCHours(nextH, 0, 0, 0);
+    if(next <= now) next.setUTCHours(next.getUTCHours() + 2);
+    return next;
+  }
+  function update() {
+    const el = document.getElementById('countdown');
+    if(!el) return;
+    const diff = getNextRun() - new Date();
+    if(diff <= 0) { el.textContent = 'Running now!'; el.style.color='#fbbf24'; setTimeout(update, 1000); return; }
+    const h = Math.floor(diff/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    el.style.color = diff < 600000 ? '#fbbf24' : '#4ade80';
+    setTimeout(update, 1000);
+  }
+  update();
+}
+  
 </script>
 </body>
 </html>
