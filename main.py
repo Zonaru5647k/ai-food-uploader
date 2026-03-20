@@ -1,7 +1,7 @@
 """
 AI Food Talking Bangla - YouTube Auto Uploader
 Runs on GitHub Actions every 2 hours, uploads 1 video
-Drive → Gemini AI → YouTube → Log to Google Sheets
+Drive → Groq AI → YouTube → Log to Google Sheets
 """
 
 import os
@@ -17,7 +17,7 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 
 DRIVE_FOLDER_ID        = os.environ["DRIVE_FOLDER_ID"]
 SHEET_ID               = os.environ["SHEET_ID"]
-GEMINI_API_KEY         = os.environ["GEMINI_API_KEY"]
+GROQ_API_KEY           = os.environ["GROQ_API_KEY"]
 SERVICE_ACCOUNT_JSON   = os.environ["GOOGLE_SERVICE_ACCOUNT"]
 YOUTUBE_CLIENT_ID      = os.environ["YOUTUBE_CLIENT_ID"]
 YOUTUBE_CLIENT_SECRET  = os.environ["YOUTUBE_CLIENT_SECRET"]
@@ -67,9 +67,11 @@ def get_pending_video(drive_service, sheet):
 def mark(sheet, fid, fname, status, title="", url="", error=""):
     try:
         cell = sheet.find(fid)
-        sheet.update(values=[[fid, fname, status, title, url,
-              datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error]],
-              range_name=f"A{cell.row}:G{cell.row}")
+        sheet.update(
+            values=[[fid, fname, status, title, url,
+                     datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error]],
+            range_name=f"A{cell.row}:G{cell.row}"
+        )
     except:
         sheet.append_row([fid, fname, status, title, url,
             datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error])
@@ -78,7 +80,7 @@ def generate_metadata(file_name):
     prompt = f"""তুমি একজন বাংলা YouTube ভাইরাল কন্টেন্ট এক্সপার্ট। AI food talking ভিডিও বাংলায়।
 ফাইল নাম: {file_name}
 
-শুধু JSON দাও, অন্য কিছু না:
+শুধু JSON দাও, অন্য কিছু না, কোনো markdown নেই:
 {{
   "youtube_title": "আকর্ষণীয় বাংলা টাইটেল ৬০ অক্ষরের মধ্যে ইমোজি সহ",
   "youtube_description": "বাংলায় ৩০০ শব্দের বর্ণনা ইমোজি সহ শেষে subscribe বলো",
@@ -86,15 +88,23 @@ def generate_metadata(file_name):
   "facebook_caption": "Facebook এর জন্য বাংলা ক্যাপশন ১৫০ শব্দ ইমোজি সহ"
 }}"""
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-    body = {"contents": [{"parts": [{"text": prompt}]}]}
-    response = requests.post(url, json=body)
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    body = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7,
+        "max_tokens": 1500
+    }
+    response = requests.post("https://api.groq.com/openai/v1/chat/completions",
+                             headers=headers, json=body)
     rjson = response.json()
-    print("Gemini response:", json.dumps(rjson, ensure_ascii=False)[:500])
-    if "candidates" not in rjson:
-        raise Exception(f"Gemini error: {rjson}")
-    text = rjson["candidates"][0]["content"]["parts"][0]["text"]
-    text = text.strip()
+    print("Groq response status:", response.status_code)
+    if "choices" not in rjson:
+        raise Exception(f"Groq error: {rjson}")
+    text = rjson["choices"][0]["message"]["content"].strip()
     if "```" in text:
         text = text.split("```")[1]
         if text.startswith("json"):
