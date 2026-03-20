@@ -8,7 +8,7 @@ from google.oauth2.credentials import Credentials as OAuthCredentials
 
 DRIVE_FOLDER_ID       = os.environ["DRIVE_FOLDER_ID"]
 SHEET_ID              = os.environ["SHEET_ID"]
-OPENROUTER_API_KEY    = os.environ["OPENROUTER_API_KEY"]
+GEMINI_API_KEY        = os.environ["GEMINI_API_KEY"]
 SERVICE_ACCOUNT_JSON  = os.environ["GOOGLE_SERVICE_ACCOUNT"]
 YOUTUBE_CLIENT_ID     = os.environ["YOUTUBE_CLIENT_ID"]
 YOUTUBE_CLIENT_SECRET = os.environ["YOUTUBE_CLIENT_SECRET"]
@@ -89,25 +89,13 @@ def generate_metadata(fname):
   "thumbnail_text": "থাম্বনেইলের জন্য ছোট বাংলা টেক্সট সর্বোচ্চ ৫ শব্দ ইমোজি সহ"
 }}"""
 
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com",
-        "X-Title": "AI Food Uploader"
-    }
-    body = {
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7,
-        "max_tokens": 1500
-    }
-    r = requests.post("https://openrouter.ai/api/v1/chat/completions",
-                      headers=headers, json=body)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
     rj = r.json()
-    print("OpenRouter status:", r.status_code)
-    if "choices" not in rj:
-        raise Exception(f"OpenRouter error: {rj}")
-    text = rj["choices"][0]["message"]["content"].strip()
+    print("Gemini status:", r.status_code)
+    if "candidates" not in rj:
+        raise Exception(f"Gemini error: {rj}")
+    text = rj["candidates"][0]["content"]["parts"][0]["text"].strip()
     if "```" in text:
         text = text.split("```")[1]
         if text.startswith("json"):
