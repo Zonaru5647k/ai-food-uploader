@@ -80,4 +80,70 @@ def generate_metadata(file_name):
 
 শুধু JSON দাও, অন্য কিছু না:
 {{
-  "youtube_title": "আকর্ষণীয় বা
+  "youtube_title": "আকর্ষণীয় বাংলা টাইটেল ৬০ অক্ষরের মধ্যে ইমোজি সহ",
+  "youtube_description": "বাংলায় ৩০০ শব্দের বর্ণনা ইমোজি সহ শেষে subscribe বলো",
+  "youtube_hashtags": "#AIFood #বাংলাফুড দিয়ে শুরু ২০টি ভাইরাল হ্যাশট্যাগ",
+  "facebook_caption": "Facebook এর জন্য বাংলা ক্যাপশন ১৫০ শব্দ ইমোজি সহ"
+}}"""
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    body = {"contents": [{"parts": [{"text": prompt}]}]}
+    response = requests.post(url, json=body)
+    text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    text = text.strip().strip("```json").strip("```").strip()
+    return json.loads(text)
+
+def upload_youtube(youtube, path, meta):
+    tags = [t.strip("#") for t in meta["youtube_hashtags"].split() if t.startswith("#")]
+    body = {
+        "snippet": {
+            "title": meta["youtube_title"],
+            "description": meta["youtube_description"] + "\n\n" + meta["youtube_hashtags"],
+            "tags": tags[:30],
+            "categoryId": "24",
+            "defaultLanguage": "bn"
+        },
+        "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}
+    }
+    media = MediaFileUpload(path, chunksize=-1, resumable=True, mimetype="video/*")
+    req = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
+    response = None
+    while response is None:
+        _, response = req.next_chunk()
+    return f"https://youtu.be/{response['id']}", meta["youtube_title"]
+
+def main():
+    print(f"🚀 Run started: {datetime.utcnow()} UTC")
+    creds   = get_creds()
+    drive   = build("drive", "v3", credentials=creds)
+    youtube = get_youtube()
+    sheet   = get_sheet()
+
+    video = get_pending_video(drive, sheet)
+    if not video:
+        print("🎉 All videos uploaded!")
+        return
+
+    fid, fname = video["id"], video["name"]
+    print(f"📹 Processing: {fname}")
+    mark(sheet, fid, fname, "processing")
+
+    try:
+        meta  = generate_metadata(fname)
+        local = f"/tmp/{fname}"
+        req   = drive.files().get_media(fileId=fid)
+        with open(local, "wb") as f:
+            dl = MediaIoBaseDownload(f, req)
+            done = False
+            while not done:
+                _, done = dl.next_chunk()
+        url, title = upload_youtube(youtube, local, meta)
+        mark(sheet, fid, fname, "uploaded", title, url)
+        print(f"✅ Uploaded: {title} → {url}")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        mark(sheet, fid, fname, "failed", error=str(e))
+        raise
+
+if __name__ == "__main__":
+    main()
