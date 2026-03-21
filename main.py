@@ -77,19 +77,24 @@ def mark(sheet, fid, fname, status, title="", url="", error=""):
             datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error])
 
 def generate_metadata(fname):
-    prompt = (
-        "You are a Bangla YouTube viral content expert. "
-        "Videos are AI talking about food health benefits in Bangla language.\n\n"
+ prompt = (
+        "You are a Bangla YouTube content writer. "
+        "Write ONLY in proper Bengali script (বাংলা হরফে). NEVER write in Roman/English letters.\n\n"
         f"File name: {fname}\n\n"
-        "Reply with ONLY valid JSON. No markdown, no explanation, no extra text.\n\n"
+        "Write a YouTube video metadata JSON for an AI food health video in Bangla.\n"
+        "Rules:\n"
+        "1. ALL text must be in Bengali script only — never Roman transliteration\n"
+        "2. Title: max 60 chars, curious and viral, about health benefits, NO specific food name\n"
+        "3. Description: exactly 250 words in Bengali script, unique sentences, NO repetition\n"
+        "4. End description with: আজই Subscribe করুন এবং Bell Icon চাপুন! 🔔\n"
+        "5. Return ONLY raw JSON, no markdown, no explanation\n\n"
         "{\n"
-        '  "youtube_title": "curiosity-driven viral Bangla title about AI revealing food health secrets, max 60 chars, with emojis, NEVER mention specific food name, use phrases like kI hoy, obak kora totho, janle chomke jaben, AI bollo, biggan bolche",\n'
-        '  "youtube_description": "minimum 300 words in Bangla about how this food helps health, what AI discovered, benefits for body, who should eat it. Use emojis. End with subscribe request in Bangla.",\n'
+        '  "youtube_title": "write title here in Bengali script",\n'
+        '  "youtube_description": "write 250 word description here in Bengali script with no repetition",\n'
         '  "youtube_hashtags": "#AIHealth #স্বাস্থ্যকর #Shorts #YouTubeShorts #HealthTips #AIFood #বাংলা #HealthyFood #AITalking #স্বাস্থ্য #ViralShorts #FoodHealth #BanglaHealth #AIBangla #HealthBangla #খাবার #পুষ্টি #ViralVideo #TrendingShorts #NewShorts",\n'
-        '  "facebook_caption": "150 words Bangla caption about AI revealing food health benefits, curiosity-driven, end with like and share request with hashtags",\n'
-        '  "thumbnail_text": "short punchy Bangla text max 5 words with emoji about health secret"\n'
-        "}\n\n"
-        "IMPORTANT: Replace ALL quoted instructions above with ACTUAL Bangla content. Return only filled JSON."
+        '  "facebook_caption": "write 100 word caption here in Bengali script",\n'
+        '  "thumbnail_text": "৫ শব্দের বাংলা টেক্সট ইমোজি সহ"\n'
+        "}\n"
     )
 
     headers = {
