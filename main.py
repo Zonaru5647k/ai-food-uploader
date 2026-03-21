@@ -1,4 +1,3 @@
-python
 import os, json, random, requests, gspread, textwrap, io
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
