@@ -77,24 +77,23 @@ def mark(sheet, fid, fname, status, title="", url="", error=""):
             datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error])
 
 def generate_metadata(fname):
- prompt = (
+    prompt = (
         "You are a Bangla YouTube content writer. "
-        "Write ONLY in proper Bengali script (বাংলা হরফে). NEVER write in Roman/English letters.\n\n"
-        f"File name: {fname}\n\n"
-        "Write a YouTube video metadata JSON for an AI food health video in Bangla.\n"
+        "Write ONLY in proper Bengali script. NEVER write in Roman letters.\n\n"
+        "Write metadata for an AI food health video. File: " + fname + "\n\n"
         "Rules:\n"
-        "1. ALL text must be in Bengali script only — never Roman transliteration\n"
-        "2. Title: max 60 chars, curious and viral, about health benefits, NO specific food name\n"
-        "3. Description: exactly 250 words in Bengali script, unique sentences, NO repetition\n"
+        "1. ALL text in Bengali script only\n"
+        "2. Title: max 60 chars, curious viral health title, NO specific food name\n"
+        "3. Description: 250 unique words in Bengali, NO repetition\n"
         "4. End description with: আজই Subscribe করুন এবং Bell Icon চাপুন! 🔔\n"
-        "5. Return ONLY raw JSON, no markdown, no explanation\n\n"
+        "5. Return ONLY raw JSON no markdown\n\n"
         "{\n"
-        '  "youtube_title": "write title here in Bengali script",\n'
-        '  "youtube_description": "write 250 word description here in Bengali script with no repetition",\n'
-        '  "youtube_hashtags": "#AIHealth #স্বাস্থ্যকর #Shorts #YouTubeShorts #HealthTips #AIFood #বাংলা #HealthyFood #AITalking #স্বাস্থ্য #ViralShorts #FoodHealth #BanglaHealth #AIBangla #HealthBangla #খাবার #পুষ্টি #ViralVideo #TrendingShorts #NewShorts",\n'
-        '  "facebook_caption": "write 100 word caption here in Bengali script",\n'
-        '  "thumbnail_text": "৫ শব্দের বাংলা টেক্সট ইমোজি সহ"\n'
-        "}\n"
+        "\"youtube_title\": \"বাংলায় ভাইরাল টাইটেল এখানে\",\n"
+        "\"youtube_description\": \"বাংলায় ২৫০ শব্দের বর্ণনা এখানে\",\n"
+        "\"youtube_hashtags\": \"#AIHealth #স্বাস্থ্যকর #Shorts #YouTubeShorts #HealthTips #AIFood #বাংলা #HealthyFood #AITalking #স্বাস্থ্য #ViralShorts #FoodHealth #BanglaHealth #AIBangla #HealthBangla #খাবার #পুষ্টি #ViralVideo #TrendingShorts #NewShorts\",\n"
+        "\"facebook_caption\": \"বাংলায় ১০০ শব্দের ক্যাপশন এখানে\",\n"
+        "\"thumbnail_text\": \"বাংলা ৫ শব্দ ইমোজি সহ\"\n"
+        "}"
     )
 
     headers = {
@@ -107,8 +106,11 @@ def generate_metadata(fname):
         "temperature": 0.8,
         "max_tokens": 2000
     }
-    r = requests.post("https://api.groq.com/openai/v1/chat/completions",
-                      headers=headers, json=body)
+    r = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers=headers,
+        json=body
+    )
     rj = r.json()
     print("Groq status:", r.status_code)
     if "choices" not in rj:
@@ -129,14 +131,16 @@ def create_thumbnail(thumb_text):
     r2,g2,b2 = int(c2[1:3],16),int(c2[3:5],16),int(c2[5:7],16)
     for i in range(H):
         ratio = i/H
-        r=int(r1+(r2-r1)*ratio); g=int(g1+(g2-g1)*ratio); b=int(b1+(b2-b1)*ratio)
+        r = int(r1+(r2-r1)*ratio)
+        g = int(g1+(g2-g1)*ratio)
+        b = int(b1+(b2-b1)*ratio)
         draw.line([(0,i),(W,i)], fill=(r,g,b))
     draw.rounded_rectangle([50,50,W-50,H-50], radius=40,
                            fill=(255,255,255), outline=c2, width=8)
     try:
-        f_big  = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 110)
-        f_mid  = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 65)
-        f_small= ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 45)
+        f_big   = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 110)
+        f_mid   = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 65)
+        f_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 45)
     except:
         f_big = f_mid = f_small = ImageFont.load_default()
     draw.text((W//2, 180), "🌿", font=f_big, fill=c1, anchor="mm")
