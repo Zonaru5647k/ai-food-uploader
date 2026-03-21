@@ -116,11 +116,13 @@ def generate_metadata(fname):
     if "choices" not in rj:
         raise Exception(f"Groq error: {rj}")
     text = rj["choices"][0]["message"]["content"].strip()
-    if "```" in text:
+  if "```" in text:
         text = text.split("```")[1]
         if text.startswith("json"):
             text = text[4:]
-    return json.loads(text.strip())
+    text = text.strip()
+    text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+    return json.loads(text)
 
 def create_thumbnail(thumb_text):
     W, H = 1280, 720
