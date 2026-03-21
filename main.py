@@ -1,3 +1,4 @@
+python
 import os, json, random, requests, gspread, textwrap, io
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
@@ -15,8 +16,8 @@ YOUTUBE_CLIENT_SECRET = os.environ["YOUTUBE_CLIENT_SECRET"]
 YOUTUBE_REFRESH_TOKEN = os.environ["YOUTUBE_REFRESH_TOKEN"]
 
 SHORTS_TAGS = ["Shorts","YouTubeShorts","ViralShorts","ShortVideo",
-               "বাংলাShorts","AIShorts","FoodShorts","ViralVideo",
-               "TrendingShorts","NewShorts","AIFood","BanglaFood"]
+               "বাংলাShorts","AIShorts","HealthShorts","ViralVideo",
+               "TrendingShorts","NewShorts","AIHealth","BanglaHealth","HealthTips"]
 
 BRIGHT_COLORS = [
     ("#FF6B6B","#FFE66D"),("#4ECDC4","#FFE66D"),("#FF6B9D","#C44DFF"),
@@ -77,22 +78,20 @@ def mark(sheet, fid, fname, status, title="", url="", error=""):
             datetime.utcnow().strftime("%Y-%m-%d %H:%M"), error])
 
 def generate_metadata(fname):
-
-  prompt = f"""You are a Bangla YouTube viral content expert. Videos are AI talking about food health benefits in Bangla language.
-
-File name: {fname}
-
-Reply with ONLY valid JSON. No markdown, no explanation, no extra text. Just the raw JSON object.
-
-{{
-  "youtube_title": "create a curiosity-driven viral Bangla title about AI revealing food health secrets, max 60 chars, with emojis, NEVER mention specific food name, use phrases like: কী হয়, অবাক করা তথ্য, জানলে চমকে যাবেন, AI বললো, বিজ্ঞান বলছে, শরীরে কী হয়",
-  "youtube_description": "write minimum 300 words in Bangla about how this food helps health, what AI discovered, what science says, benefits for body, who should eat it, when to eat it. Use emojis throughout. End with: আমাদের চ্যানেলে প্রতিদিন নতুন AI Health Food ভিডিও আসে। এখনই Subscribe করুন এবং Bell Icon চাপুন! 🔔 ভালো লাগলে Like দিন এবং বন্ধুদের সাথে Share করুন!",
-  "youtube_hashtags": "#AIHealth #স্বাস্থ্যকর #Shorts #YouTubeShorts #HealthTips #AIFood #বাংলা #HealthyFood #AITalking #স্বাস্থ্য #ViralShorts #FoodHealth #BanglaHealth #AIBangla #HealthBangla #খাবার #পুষ্টি #ViralVideo #TrendingShorts #NewShorts",
-  "facebook_caption": "write 150 words in Bangla about AI revealing amazing food health benefits, curiosity-driven, end with like and share request, include relevant hashtags",
-  "thumbnail_text": "short punchy Bangla text max 5 words with emoji about health or AI secret"
-}}
-
-IMPORTANT: Replace ALL the quoted instructions above with ACTUAL Bangla content. Return only the filled JSON."""
+    prompt = (
+        "You are a Bangla YouTube viral content expert. "
+        "Videos are AI talking about food health benefits in Bangla language.\n\n"
+        f"File name: {fname}\n\n"
+        "Reply with ONLY valid JSON. No markdown, no explanation, no extra text.\n\n"
+        "{\n"
+        '  "youtube_title": "curiosity-driven viral Bangla title about AI revealing food health secrets, max 60 chars, with emojis, NEVER mention specific food name, use phrases like kI hoy, obak kora totho, janle chomke jaben, AI bollo, biggan bolche",\n'
+        '  "youtube_description": "minimum 300 words in Bangla about how this food helps health, what AI discovered, benefits for body, who should eat it. Use emojis. End with subscribe request in Bangla.",\n'
+        '  "youtube_hashtags": "#AIHealth #স্বাস্থ্যকর #Shorts #YouTubeShorts #HealthTips #AIFood #বাংলা #HealthyFood #AITalking #স্বাস্থ্য #ViralShorts #FoodHealth #BanglaHealth #AIBangla #HealthBangla #খাবার #পুষ্টি #ViralVideo #TrendingShorts #NewShorts",\n'
+        '  "facebook_caption": "150 words Bangla caption about AI revealing food health benefits, curiosity-driven, end with like and share request with hashtags",\n'
+        '  "thumbnail_text": "short punchy Bangla text max 5 words with emoji about health secret"\n'
+        "}\n\n"
+        "IMPORTANT: Replace ALL quoted instructions above with ACTUAL Bangla content. Return only filled JSON."
+    )
 
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -101,8 +100,8 @@ IMPORTANT: Replace ALL the quoted instructions above with ACTUAL Bangla content.
     body = {
         "model": "llama-3.1-8b-instant",
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7,
-        "max_tokens": 1500
+        "temperature": 0.8,
+        "max_tokens": 2000
     }
     r = requests.post("https://api.groq.com/openai/v1/chat/completions",
                       headers=headers, json=body)
@@ -136,14 +135,14 @@ def create_thumbnail(thumb_text):
         f_small= ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 45)
     except:
         f_big = f_mid = f_small = ImageFont.load_default()
-    draw.text((W//2, 180), "🍛", font=f_big, fill=c1, anchor="mm")
-    draw.text((W//2, 350), "AI FOOD", font=f_mid,
+    draw.text((W//2, 180), "🌿", font=f_big, fill=c1, anchor="mm")
+    draw.text((W//2, 350), "AI HEALTH", font=f_mid,
               fill=c1, anchor="mm", stroke_width=3, stroke_fill="white")
     wrapped = textwrap.fill(thumb_text, width=20)
     draw.text((W//2, 510), wrapped, font=f_small,
               fill="#222222", anchor="mm", align="center")
     draw.rounded_rectangle([50,600,320,670], radius=20, fill=c1)
-    draw.text((185,635), "Bangla AI Food", font=f_small, fill="white", anchor="mm")
+    draw.text((185,635), "Bangla AI Health", font=f_small, fill="white", anchor="mm")
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=95)
     buf.seek(0)
