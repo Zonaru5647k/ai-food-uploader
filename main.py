@@ -202,7 +202,7 @@ def main():
             while not done:
                 _, done = dl.next_chunk()
         url, title, vid = upload_youtube(youtube, local, meta)
-        buf = create_thumbnail(meta["thumbnail_text"])
+        buf = create_thumbnail(meta.get("thumbnail_text", title[:30]))
         media = MediaIoBaseUpload(buf, mimetype="image/jpeg", resumable=True)
         youtube.thumbnails().set(videoId=vid, media_body=media).execute()
         print("✅ Thumbnail uploaded!")
