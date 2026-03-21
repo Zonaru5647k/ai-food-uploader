@@ -86,16 +86,13 @@ def generate_metadata(fname):
         "2. Title: max 60 chars, curious viral health title, NO specific food name\n"
         "3. Description: 250 unique words in Bengali, NO repetition\n"
         "4. End description with: আজই Subscribe করুন এবং Bell Icon চাপুন! 🔔\n"
-        "5. Return ONLY raw JSON no markdown\n\n"
-        "{\n"
-        "\"youtube_title\": \"বাংলায় ভাইরাল টাইটেল এখানে\",\n"
-        "\"youtube_description\": \"বাংলায় ২৫০ শব্দের বর্ণনা এখানে\",\n"
-        "\"youtube_hashtags\": \"#AIHealth #স্বাস্থ্যকর #Shorts #YouTubeShorts #HealthTips #AIFood #বাংলা #HealthyFood #AITalking #স্বাস্থ্য #ViralShorts #FoodHealth #BanglaHealth #AIBangla #HealthBangla #খাবার #পুষ্টি #ViralVideo #TrendingShorts #NewShorts\",\n"
-        "\"facebook_caption\": \"বাংলায় ১০০ শব্দের ক্যাপশন এখানে\",\n"
-        "\"thumbnail_text\": \"বাংলা ৫ শব্দ ইমোজি সহ\"\n"
-        "}"
+        "5. Return ONLY raw JSON no markdown no newlines inside values\n\n"
+        "{\"youtube_title\": \"বাংলায় ভাইরাল টাইটেল\","
+        "\"youtube_description\": \"বাংলায় বর্ণনা\","
+        "\"youtube_hashtags\": \"#AIHealth #স্বাস্থ্যকর #Shorts #YouTubeShorts #HealthTips #AIFood #বাংলা #HealthyFood #AITalking #স্বাস্থ্য #ViralShorts #FoodHealth #BanglaHealth #AIBangla #HealthBangla #খাবার #পুষ্টি #ViralVideo #TrendingShorts #NewShorts\","
+        "\"facebook_caption\": \"বাংলায় ক্যাপশন\","
+        "\"thumbnail_text\": \"বাংলা ৫ শব্দ\"}"
     )
-
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
@@ -116,7 +113,7 @@ def generate_metadata(fname):
     if "choices" not in rj:
         raise Exception(f"Groq error: {rj}")
     text = rj["choices"][0]["message"]["content"].strip()
-  if "```" in text:
+    if "```" in text:
         text = text.split("```")[1]
         if text.startswith("json"):
             text = text[4:]
